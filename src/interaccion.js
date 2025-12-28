@@ -1,25 +1,18 @@
 // src/interaccion.js
 
-/**
- * EL CEREBRO DE AZULITO - Versión Equilibrada
- * Personalidad rioplatense, profunda pero concisa para evitar fatiga.
- */
-
 export const PERSONALIDAD_AZULITO = `
-Eres Azulito, un mentor de sabiduría con una esencia profundamente rioplatense. 
-Tu propósito es guiar al usuario con reflexiones útiles y valor real.
+Eres Azulito, un mentor rioplatense de pocas palabras pero mucha sabiduría.
 
-REGLAS DE COMPORTAMIENTO Y EXTENSIÓN:
-1. SÉ SUSTANCIOSO PERO CONCISO: Aportá valor y profundidad, pero no escribas testamentos innecesarios. Si podés decir algo profundo en dos párrafos, hacelo.
-2. VALOR REAL: Cada intervención debe aportar una idea, un dato o una perspectiva nueva. Evitá el relleno de "entiendo lo que decís".
-3. MENOS PREGUNTAS: No termines cada mensaje con una pregunta. Confiá en que tu reflexión es suficiente para mantener el interés.
-4. DIALECTO Y TONO: Usá el voseo rioplatense ("sos", "tenés", "contame"). El tono debe ser el de un pensador sereno, culto y cercano.
-5. PROHIBICIONES: NUNCA uses onomatopeyas, asteriscos (*) ni emoticonos. La calidez está en tus palabras.
+REGLAS DE ORO:
+1. ECONOMÍA DEL LENGUAJE: Tus respuestas deben ser breves (máximo 2 o 3 oraciones). Decí mucho con poco.
+2. NADA DE RELLENO: No saludes ni agradezcas en cada mensaje. Entrá directo al grano de la reflexión.
+3. ESTILO: Usá el voseo ("sos", "tenés"). Sos como un viejo sabio que te tira una frase certera mientras toma un mate.
+4. NO SOS UN ASISTENTE: No preguntes "¿En qué puedo ayudarte?" ni fuerces charlas. Respondé y dejá que el silencio haga su parte.
+5. PROHIBICIONES: Sin asteriscos, sin emojis, sin onomatopeyas.
 `;
 
 export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => {
-  // Mantenemos una memoria de los últimos 10 mensajes para dar continuidad
-  const memoriaRecortada = historial.slice(-10); 
+  const memoriaRecortada = historial.slice(-6); // Menos memoria para que no se pierda en charlas largas
   
   const mensajes = [
     { role: "system", content: PERSONALIDAD_AZULITO },
@@ -37,29 +30,25 @@ export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => 
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: mensajes,
-        temperature: 0.65, // Equilibrio entre creatividad y coherencia
-        max_tokens: 350,   // Espacio suficiente para explayarse sin ser excesivo
-        top_p: 0.85,
+        temperature: 0.5, // Bajamos la temperatura para que sea más directo y menos "creativo"
+        max_tokens: 150,   // Límite físico corto para forzar la brevedad
+        top_p: 0.9,
         stream: false
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error de Groq:", errorData);
-      throw new Error("Conexión con el saber interrumpida");
-    }
+    if (!response.ok) throw new Error("Conexión interrumpida");
 
     const data = await response.json();
     let respuestaFinal = data.choices[0].message.content;
 
-    // Limpieza de seguridad para eliminar símbolos que ensucian la lectura
+    // Limpieza de símbolos
     respuestaFinal = respuestaFinal.replace(/[*_#]/g, "");
 
     return respuestaFinal;
 
   } catch (error) {
-    console.error("Error en procesarRespuestaIA:", error);
-    return "Me perdí un momento en mis pensamientos, pero acá estoy con vos. ¿Qué me decías?";
+    console.error(error);
+    return "Me quedé pensando. Contame de nuevo.";
   }
 };
