@@ -1,42 +1,118 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* src/App.css */
+:root {
+  --color-azulito: #3b82f6;
+  --color-brillo: #a5f3fc;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.contenedor-gotchi {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Las partículas ahora tienen z-index 1 */
+.particula {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px white;
+  filter: blur(1px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* El Aura y el Gotchi tienen z-index 10 para estar al frente */
+.gotchi-aura {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.gotchi-aura::before {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  background: var(--color-azulito);
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  filter: blur(40px);
+  opacity: 0.3;
+  animation: aura-giratoria 10s infinite linear;
+}
+
+@keyframes aura-giratoria {
+  from { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  to { transform: rotate(360deg) scale(1); }
+}
+
+/* Estilos de UI con Glassmorphism */
+input {
+  margin-top: 30px;
+  padding: 12px 25px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
   text-align: center;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  width: 250px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Añade o reemplaza esto en App.css */
+.btn-musica {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(165, 243, 252, 0.3); /* Color brillo de Azulito */
+  color: #a5f3fc;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px; /* Estilo redondeado como el cuerpo del avatar */
+  cursor: pointer;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.card {
-  padding: 2em;
+.btn-musica:hover {
+  background: rgba(165, 243, 252, 0.1);
+  border-color: #a5f3fc;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 20px rgba(165, 243, 252, 0.2);
 }
 
-.read-the-docs {
-  color: #888;
+.btn-musica.muted {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+
+.btn-reset {
+  margin-top: 50px;
+  background: none;
+  border: none;
+  color: white;
+  opacity: 0.2;
+  font-size: 0.7rem;
+  cursor: pointer;
 }
