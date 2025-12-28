@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMotion } from './useMotion'
 import { useMemory } from './useMemory'
@@ -9,12 +9,12 @@ import { Avatar } from './avatar.jsx'
 import './App.css'
 
 function App() {
-  // 1. DECLARACIÓN DE TODOS LOS HOOKS (Siempre al inicio y en el mismo orden)
+  // 1. DECLARACIÓN DE TODOS LOS HOOKS
   const mouse = useMousePosition(); 
   const { startAmbience, stopAmbience } = useAmbience();
   const { historial, setHistorial, borrarMemoria } = useMemory();
   
-  const [status, setStatus] = useState("Tócame para despertar");
+  const [status, setStatus] = useState("Estoy aquí para escucharte");
   const [color, setColor] = useState("#3b82f6");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -24,133 +24,153 @@ function App() {
 
   const animations = useMotion(status);
 
-  // 2. FUNCIONES DE LÓGICA (Memorizadas para estabilidad)
- const toggleMusica = useCallback((e) => {
-  if (e) e.stopPropagation();
-  
-  // Usamos el valor funcional de setEstado para asegurar sincronía total
-  setIsMuted((prevMuted) => {
-    const nuevoEstado = !prevMuted;
-    if (nuevoEstado) {
-      stopAmbience(); // Si ahora está muteado, apagamos
+  // 2. LÓGICA DE AGENTE PROACTIVO (Reloj de iniciativa)
+  useEffect(() => {
+    const timerInactividad = setTimeout(() => {
+      if (!isSpeaking && !status.includes("Reflexionando")) {
+        setColor("#fde047"); 
+        setStatus("Te noto muy pensativo...");
+        responderIA("Lanza una pregunta proactiva para romper el silencio.");
+      }
+    }, 25000); 
+
+    return () => clearTimeout(timerInactividad);
+  }, [status, isSpeaking]);
+
+  // 3. FUNCIONES DE LÓGICA
+  const toggleMusica = useCallback((e) => {
+    if (e) e.stopPropagation();
+    setIsMuted((prevMuted) => {
+      const nuevoEstado = !prevMuted;
+      nuevoEstado ? stopAmbience() : startAmbience();
+      return nuevoEstado;
+    });
+  }, [startAmbience, stopAmbience]);
+
+  const hablarConVozFemenina = (texto) => {
+    window.speechSynthesis.cancel();
+    const mensaje = new SpeechSynthesisUtterance(texto.replace(/[*_#~]/g, ''));
+    
+    // Configuración para España
+    mensaje.lang = 'es-ES'; 
+
+    const obtenerVozYHablar = () => {
+      const voces = window.speechSynthesis.getVoices();
+      
+      // Buscamos específicamente voces de España. Google Español es la mejor.
+      const vozIdeal = voces.find(v => v.lang === 'es-ES' || v.name.includes('Spain')) || 
+                       voces.find(v => v.lang.includes('es'));
+
+      if (vozIdeal) {
+        mensaje.voice = vozIdeal;
+      }
+
+      mensaje.pitch = 1.0; 
+      mensaje.rate = 1.0; // Velocidad normal para España
+
+      let mouthInterval;
+      mensaje.onstart = () => {
+        setIsSpeaking(true);
+        mouthInterval = setInterval(() => setBocaScale(Math.random() * 0.7 + 0.3), 80); 
+      };
+
+      mensaje.onend = () => {
+        clearInterval(mouthInterval);
+        setIsSpeaking(false);
+        setBocaScale(0);
+        setStatus("Estoy aquí contigo.");
+        setColor("#3b82f6");
+      };
+
+      window.speechSynthesis.speak(mensaje);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = obtenerVozYHablar;
     } else {
-      startAmbience(); // Si le quitamos el mute, encendemos
+      obtenerVozYHablar();
     }
-    return nuevoEstado;
-  });
-}, [startAmbience, stopAmbience]);
+  };
+
+  const responderIA = async (msg) => {
+    setColor("#a855f7"); 
+    setStatus("Reflexionando...");
+    try {
+      const respuestaIA = await procesarRespuestaIA(msg, historial, import.meta.env.VITE_GROQ_API_KEY);
+      setHistorial([...historial, { role: "user", content: msg }, { role: "assistant", content: respuestaIA }]);
+      hablarConVozFemenina(respuestaIA);
+    } catch (error) {
+      setColor("#3b82f6");
+      setStatus("Vaya, parece que tengo un problema de conexión...");
+    }
+  };
 
   const manejarInteraccionPrincipal = () => {
-    // Si la música no se ha iniciado nunca y no está muteado, la arranca
     if (!musicaIniciada && !isMuted) {
       startAmbience();
       setMusicaIniciada(true);
     }
-    escuchar();
-  };
-
-  const hablarConVozFemenina = (texto) => {
-    window.speechSynthesis.cancel();
-    const textoLimpio = texto.replace(/[*_#~]/g, '');
-    const mensaje = new SpeechSynthesisUtterance(textoLimpio);
+    const oido = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     
-    const voces = window.speechSynthesis.getVoices();
-    mensaje.voice = voces.find(v => v.lang.includes('es')) || voces[0];
-    mensaje.pitch = 1.1; 
-    mensaje.rate = 0.95;
-
-    let mouthInterval;
-
-    mensaje.onstart = () => {
-      setIsSpeaking(true);
-      setStatus("Azulito te enseña...");
-      // Vibración de la boca bilineal
-      mouthInterval = setInterval(() => {
-        setBocaScale(Math.random() * 0.7 + 0.3);
-      }, 80); 
-    };
-
-    mensaje.onend = () => {
-      clearInterval(mouthInterval);
-      setIsSpeaking(false);
-      setBocaScale(0);
-      setStatus("¿En qué más puedo ayudarte?");
-    };
-
-    window.speechSynthesis.speak(mensaje);
-  };
-
-  const oido = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  oido.lang = 'es-ES';
-
-  const escuchar = () => {
-    try {
-      oido.start();
-      setStatus("Te escucho atentamente...");
-    } catch (e) { console.log("Error de micro:", e); }
-  };
-
-  oido.onresult = (event) => {
-    const texto = event.results[0][0].transcript;
-    responderIA(texto);
-  };
-
-  const responderIA = async (msg) => {
-    setStatus("Reflexionando...");
-    const respuestaIA = await procesarRespuestaIA(msg, historial, import.meta.env.VITE_GROQ_API_KEY);
-    setHistorial([...historial, { role: "user", content: msg }, { role: "assistant", content: respuestaIA }]);
-    hablarConVozFemenina(respuestaIA);
+    // Configuramos el oído para que entienda el español de España
+    oido.lang = 'es-ES'; 
+    
+    oido.onresult = (e) => responderIA(e.results[0][0].transcript);
+    try { 
+      oido.start(); 
+      setStatus("Te escucho..."); 
+      setColor("#fde047"); 
+    } catch(e){}
   };
 
   return (
     <div className="contenedor-gotchi">
-      {/* BOTÓN DE MÚSICA ESTABLE */}
-      <button 
-        onClick={toggleMusica}
-        className={`btn-musica ${isMuted ? 'muted' : ''}`}
-        title={isMuted ? "Activar música" : "Desactivar música"}
-      >
+      <button onClick={toggleMusica} className={`btn-musica ${isMuted ? 'muted' : ''}`}>
         {isMuted ? "🔇" : "🔊"}
       </button>
 
-      {/* PARTÍCULAS DE FONDO */}
       {particulas.map((_, i) => (
         <motion.div
           key={i} className="particula"
           initial={{ y: "110vh", opacity: 0 }}
-          animate={{ y: "-10vh", opacity: [0, 0.5, 0] }}
-          transition={{ duration: 10 + Math.random() * 15, repeat: Infinity, delay: Math.random() * 10, ease: "linear" }}
-          style={{ left: `${Math.random() * 100}%`, width: '2px', height: '2px', zIndex: 1 }}
+          animate={{ y: "-10vh", opacity: isSpeaking ? [0, 0.8, 0] : [0, 0.3, 0] }}
+          transition={{ duration: isSpeaking ? 5 : 15, repeat: Infinity, delay: Math.random() * 10, ease: "linear" }}
+          style={{ left: `${Math.random() * 100}%`, background: color, width: '2px', height: '2px', zIndex: 1 }}
         />
       ))}
 
       <div className="gotchi-aura">
         <Avatar 
-          color={color} 
-          mouse={mouse} 
-          animations={animations} 
-          bocaScale={bocaScale} 
-          isSpeaking={isSpeaking}
+          color={color} mouse={mouse} animations={animations} 
+          bocaScale={bocaScale} isSpeaking={isSpeaking}
           onClick={manejarInteraccionPrincipal} 
         />
       </div>
       
-      <p style={{ color: 'white', opacity: 0.6, marginTop: '25px', zIndex: 10, textAlign: 'center' }}>
+      <p style={{ color: 'white', opacity: 0.8, marginTop: '25px', zIndex: 10, textAlign: 'center', transition: '0.5s' }}>
         {status}
       </p>
 
-      <form onSubmit={(e) => {
+     <form onSubmit={(e) => {
         e.preventDefault();
         const input = e.target.chatInput;
-        if (input.value.trim()) {
-          responderIA(input.value);
-          input.value = "";
+        if (input.value.trim()) { 
+          responderIA(input.value); 
+          input.value = ""; 
         }
       }} style={{ zIndex: 10 }}>
-        <input name="chatInput" type="text" placeholder="Hazme una pregunta..." className="chat-input" />
+        <input name="chatInput" type="text" placeholder="Charlemos un rato..." className="chat-input" />
       </form>
 
-      <button className="btn-reset" onClick={borrarMemoria}>
+      <button 
+        onClick={() => {
+          borrarMemoria();
+          setStatus("Memoria limpia. Soy una página en blanco.");
+          setColor("#3b82f6");
+        }} 
+        className="btn-reset"
+        title="Reiniciar conversación"
+      >
         Limpiar memoria
       </button>
     </div>

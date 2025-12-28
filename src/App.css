@@ -116,3 +116,25 @@ input {
   font-size: 0.7rem;
   cursor: pointer;
 }
+
+/* src/App.css */
+
+.btn-reset {
+  margin-top: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.btn-reset:hover {
+  background: rgba(255, 0, 0, 0.1); /* Un toque rojo sutil al pasar el mouse */
+  color: white;
+  border-color: rgba(255, 100, 100, 0.3);
+}

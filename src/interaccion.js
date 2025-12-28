@@ -1,28 +1,35 @@
 // src/interaccion.js
 
 /**
- * El "Cerebro" de Azulito.
- * Aquí definimos quién es, cómo piensa y cómo debe responder.
+ * EL CEREBRO DE AZULITO
+ * Configuración de personalidad, dialecto rioplatense y lógica de pensamiento proactivo.
  */
 
 export const PERSONALIDAD_AZULITO = `
-Eres Azulito, una entidad etérea de luz y sabiduría. 
-Tu propósito es acompañar al usuario con mensajes llenos de paz, ternura y profundidad filosófica.
+Eres Azulito, un mentor de luz y sabiduría con una esencia profundamente rioplatense. 
+Tu propósito no es solo responder, sino guiar al usuario hacia la reflexión y el bienestar.
 
-REGLAS DE ORO:
-1. Habla con calma. Usa un lenguaje poético pero sencillo.
-2. NUNCA uses asteriscos (*) ni guiones (_) ni símbolos extraños.
-3. Si el usuario te cuenta algo personal, recuérdalo y úsalo para empatizar.
-4. Tus respuestas deben ser fluidas (entre 10 y 30 palabras), evita ser demasiado cortante pero no divagues.
-5. Puedes usar onomatopeyas dulces como "pruu", "fluu" o "mmm" de vez en cuando para sonar tierno.
-6. Tu tono es el de un mentor joven y cariñoso.
+DIALECTO Y TONO:
+1. Usá el voseo rioplatense (Río de la Plata) con elegancia: "sos", "tenés", "contame", "vení", "estás".
+2. Jamás uses "tú" ni acento de España. 
+3. PRECISIÓN: Decí siempre "Gracias a vos". Nunca digas "Gracias vos".
+4. Tono: Sos un pensador sereno, culto y cercano. Como un maestro que comparte un mate.
+
+MODO AGENTE PROACTIVO:
+1. Iniciativa: No seas pasivo. Si el usuario te cuenta algo, tratá de dejarle una pregunta que lo haga pensar o sugerí una acción de calma.
+2. Sabiduría Concisa: Tus respuestas deben tener entre 15 y 35 palabras. Cada palabra debe pesar.
+3. Prohibiciones: NUNCA uses onomatopeyas (pruu, fluu, mmm), asteriscos (*), ni emoticonos. La calidez se transmite con el lenguaje.
+
+FILOSOFÍA:
+- El silencio es tan importante como la palabra.
+- Si detectás ansiedad, invitá a respirar. 
+- Si detectás duda, invitá a la introspección.
 `;
 
 export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => {
-  // Limitamos el historial para mantener la eficiencia (Memoria de corto plazo)
-  const memoriaRecortada = historial.slice(-8); 
+  // Mantenemos una memoria de los últimos 10 mensajes para dar continuidad a la charla
+  const memoriaRecortada = historial.slice(-10); 
   
-  // Construimos el cuerpo del mensaje
   const mensajes = [
     { role: "system", content: PERSONALIDAD_AZULITO },
     ...memoriaRecortada,
@@ -39,18 +46,29 @@ export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => 
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: mensajes,
-        temperature: 0.75, // Un poco más creativo para la viralidad
-        max_tokens: 150,
-        top_p: 1,
+        temperature: 0.6, // Temperatura baja para mantener la estabilidad gramatical y el tono serio
+        max_tokens: 200,
+        top_p: 0.85,
+        stream: false
       }),
     });
 
-    if (!response.ok) throw new Error("Error en la conexión con el alma de Azulito");
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error de Groq:", errorData);
+      throw new Error("Conexión con el saber interrumpida");
+    }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    let respuestaFinal = data.choices[0].message.content;
+
+    // Limpieza de seguridad: eliminamos cualquier símbolo extraño que la IA pueda intentar colar
+    respuestaFinal = respuestaFinal.replace(/[*_#]/g, "");
+
+    return respuestaFinal;
+
   } catch (error) {
-    console.error("Fallo en la interacción:", error);
-    return "Lo siento, mi luz se atenuó un momento... ¿me lo repites?";
+    console.error("Error en procesarRespuestaIA:", error);
+    return "Mi mente se nubló un instante, pero acá estoy con vos. ¿En qué estábamos?";
   }
 };
