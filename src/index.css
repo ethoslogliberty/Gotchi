@@ -1,0 +1,13 @@
+:root {
+  background-color: #0a0a0a;
+  color: #4ade80;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
