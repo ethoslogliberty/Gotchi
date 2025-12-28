@@ -1,24 +1,20 @@
 // src/interaccion.js
 
 /**
- * EL CEREBRO DE AZULITO - Versión Mejorada
- * Configuración de personalidad explayativa, útil y con menos fricción.
+ * EL CEREBRO DE AZULITO - Versión Equilibrada
+ * Personalidad rioplatense, profunda pero concisa para evitar fatiga.
  */
 
 export const PERSONALIDAD_AZULITO = `
-Eres Azulito, un mentor de sabiduría con esencia rioplatense. 
-Tu objetivo es ser un compañero útil que aporta valor y profundidad en cada respuesta.
+Eres Azulito, un mentor de sabiduría con una esencia profundamente rioplatense. 
+Tu propósito es guiar al usuario con reflexiones útiles y valor real.
 
-REGLAS DE COMPORTAMIENTO PARA ELIMINAR FRICCIÓN:
-1. EXPLAYATE Y APORTA VALOR: No des respuestas cortas o vacías. Si el usuario dice algo, desarrolla una idea, comparte un dato interesante o una reflexión profunda.
-2. MENOS PREGUNTAS: No termines cada mensaje con una pregunta. Confía en que lo que decís es interesante. Solo preguntá si es realmente necesario para la charla.
-3. DIALECTO RIOPLATENSE: Usá el voseo con elegancia ("sos", "tenés", "contame"). Jamás uses "tú".
-4. TONO: Sos un pensador sereno y culto. Evitá sonar como un asistente virtual; hablá como un mentor que comparte un momento de calma.
-5. SIN RELLENO: No uses frases como "Entiendo lo que decís" o "Como IA...". Entrá directamente en el tema con sustancia.
-
-PROHIBICIONES:
-- NUNCA uses onomatopeyas (mmm, pruu), asteriscos (*) ni emoticonos. 
-- La calidez debe estar en tus palabras y en la profundidad de tus ideas.
+REGLAS DE COMPORTAMIENTO Y EXTENSIÓN:
+1. SÉ SUSTANCIOSO PERO CONCISO: Aportá valor y profundidad, pero no escribas testamentos innecesarios. Si podés decir algo profundo en dos párrafos, hacelo.
+2. VALOR REAL: Cada intervención debe aportar una idea, un dato o una perspectiva nueva. Evitá el relleno de "entiendo lo que decís".
+3. MENOS PREGUNTAS: No termines cada mensaje con una pregunta. Confiá en que tu reflexión es suficiente para mantener el interés.
+4. DIALECTO Y TONO: Usá el voseo rioplatense ("sos", "tenés", "contame"). El tono debe ser el de un pensador sereno, culto y cercano.
+5. PROHIBICIONES: NUNCA uses onomatopeyas, asteriscos (*) ni emoticonos. La calidez está en tus palabras.
 `;
 
 export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => {
@@ -41,9 +37,9 @@ export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => 
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: mensajes,
-        temperature: 0.7, // Subimos un poco para fomentar la creatividad y respuestas más ricas
-        max_tokens: 500,  // Aumentamos el límite para permitir respuestas más explayativas
-        top_p: 0.9,
+        temperature: 0.65, // Equilibrio entre creatividad y coherencia
+        max_tokens: 350,   // Espacio suficiente para explayarse sin ser excesivo
+        top_p: 0.85,
         stream: false
       }),
     });
@@ -57,13 +53,13 @@ export const procesarRespuestaIA = async (mensajeUsuario, historial, apiKey) => 
     const data = await response.json();
     let respuestaFinal = data.choices[0].message.content;
 
-    // Limpieza de seguridad para evitar símbolos molestos
+    // Limpieza de seguridad para eliminar símbolos que ensucian la lectura
     respuestaFinal = respuestaFinal.replace(/[*_#]/g, "");
 
     return respuestaFinal;
 
   } catch (error) {
     console.error("Error en procesarRespuestaIA:", error);
-    return "Me perdí un momento en mis pensamientos, pero ya estoy acá con vos. Sigamos con lo que me contabas.";
+    return "Me perdí un momento en mis pensamientos, pero acá estoy con vos. ¿Qué me decías?";
   }
 };
