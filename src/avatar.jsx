@@ -1,33 +1,32 @@
-// src/avatar.jsx - VERSIÓN FINAL: SIN ERRORES DE CAPAS Y PARPADEO REAL
+// src/avatar.jsx - VERSIÓN KAWAII FINAL (Sin errores de estilo)
 import { motion, useSpring } from 'framer-motion'
 import { useState, useEffect, memo } from 'react'
 
-const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking, color }) => (
-  <motion.g style={{ x: springX * 0.1, y: springY * 0.1 }}>
-    {/* Contenedor del ojo con máscara de recorte para evitar "cuernos" */}
-    <defs>
-      <clipPath id={`clip-ojo-${cx}`}>
-        <circle cx={cx} cy={cy} r="7" />
-      </clipPath>
-    </defs>
-
-    {/* Esclera (Blanco del ojo) */}
-    <circle cx={cx} cy={cy} r="7" fill="white" />
+const Ojo = memo(({ cx, cy, springX, springY, blink }) => (
+  <motion.g 
+    // UNIFICAMOS EL STYLE AQUÍ (Sin duplicados)
+    style={{ 
+      x: springX * 0.15, 
+      y: springY * 0.15,
+      originX: `${cx}%`, 
+      originY: `${cy}%` 
+    }}
+    animate={{ scaleY: blink ? 0 : 1 }}
+    transition={{ duration: 0.08 }}
+  >
+    {/* Fondo blanco del ojo */}
+    <circle cx={cx} cy={cy} r="8" fill="white" /> 
     
-    {/* Pupila */}
+    {/* Pupila negra */}
     <motion.circle 
-      cx={cx} cy={cy} r="3.2" fill="black"
-      style={{ x: springX * 0.4, y: springY * 0.4 }} 
+      cx={cx} cy={cy} r="4" fill="black"
+      style={{ x: springX * 0.5, y: springY * 0.5 }} 
     />
-
-    {/* PÁRPADO (Interno: nunca sale del círculo del ojo) */}
-    <motion.rect
-      x={cx - 8} y={cy - 16} width="16" height="16"
-      fill={color} // Usa el color exacto del cuerpo
-      clipPath={`url(#clip-ojo-${cx})`}
-      initial={{ y: 0 }}
-      animate={{ y: blink ? 16 : 0 }}
-      transition={{ duration: 0.12, ease: "easeInOut" }}
+    
+    {/* Brillo tierno (Punto de luz) */}
+    <motion.circle 
+      cx={cx - 2} cy={cy - 2} r="1.8" fill="white"
+      style={{ x: springX * 0.6, y: springY * 0.6 }} 
     />
   </motion.g>
 ));
@@ -35,14 +34,14 @@ const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking, color }) => (
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
 
-  // Físicas elásticas equilibradas
-  const springConfig = { stiffness: 110, damping: 15, mass: 0.6 };
+  // Físicas de gelatina
+  const springConfig = { stiffness: 170, damping: 15, mass: 0.5 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
 
   useEffect(() => {
-    springX.set(mouse.x * 12); 
-    springY.set(mouse.y * 12);
+    springX.set(mouse.x * 10); 
+    springY.set(mouse.y * 10);
   }, [mouse.x, mouse.y, springX, springY]);
 
   // Lógica de parpadeo estable
@@ -54,65 +53,63 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
         setTimeout(() => {
           setBlink(false);
           loop();
-        }, 150);
-      }, 3000 + Math.random() * 3000);
+        }, 100);
+      }, 2500 + Math.random() * 3000);
     };
     loop();
     return () => clearTimeout(timeout);
   }, []);
 
-  const isThinking = status?.includes("Reflexionando");
-
   return (
     <motion.div 
       onClick={onClick} 
       style={{ cursor: 'pointer', position: 'relative' }}
-      whileTap={{ scale: 0.92 }}
+      whileTap={{ scale: 0.9 }}
     >
       <svg width="280" height="280" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
         <defs>
-          <filter id="gooey-final">
+          <filter id="gooey-kawaii-final">
             <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
             <feColorMatrix in="blur" mode="matrix" 
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>
 
-        {/* CUERPO: Formas simples y tiernas sin bultos frontales */}
-        <g style={{ filter: 'url(#gooey-final)' }} fill={color}>
-          {/* Centro gordo y tierno */}
+        {/* CUERPO: Gota gorda y tierna (Sin bultos en la frente) */}
+        <g style={{ filter: 'url(#gooey-kawaii-final)' }} fill={color}>
           <motion.circle
-            cx="50" cy="62"
-            animate={{ r: isSpeaking ? [31, 33, 31] : [30, 31, 30] }}
+            cx="50" cy="65"
+            animate={{ r: isSpeaking ? [32, 34, 32] : [31, 32, 31] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          {/* Cachetes que fluyen con el movimiento */}
-          <motion.circle cx="35" cy="65" r="18" style={{ x: springX * 0.2, y: springY * 0.2 }} />
-          <motion.circle cx="65" cy="65" r="18" style={{ x: springX * 0.2, y: springY * 0.2 }} />
+          {/* Cachetes que dan la forma redondeada inferior */}
+          <motion.circle cx="35" cy="70" r="22" style={{ x: springX * 0.2, y: springY * 0.2 }} />
+          <motion.circle cx="65" cy="70" r="22" style={{ x: springX * 0.2, y: springY * 0.2 }} />
         </g>
 
-        {/* ROSTRO UNIFICADO: Ojos y Boca anclados */}
+        {/* CARA: Ubicada abajo para máxima ternura */}
         <motion.g style={{ x: springX * 0.5, y: springY * 0.5 }}>
-          <Ojo cx={40} cy={58} springX={springX} springY={springY} blink={blink} isThinking={isThinking} color={color} />
-          <Ojo cx={60} cy={58} springX={springX} springY={springY} blink={blink} isThinking={isThinking} color={color} />
+          <Ojo cx={38} cy={63} springX={springX} springY={springY} blink={blink} />
+          <Ojo cx={62} cy={63} springX={springX} springY={springY} blink={blink} />
 
-          {/* BOCA: Sonrisa o Apertura elástica */}
-          <motion.g transform="translate(50, 76)">
+          {/* BOCA: Sonrisa o habla elástica */}
+          <motion.g transform="translate(50, 78)">
             {isSpeaking ? (
               <motion.ellipse
-                cx="0" cy="0" rx="5.5"
-                animate={{ ry: Math.max(1.5, bocaScale * 8) }}
+                cx="0" cy="0" rx="5"
+                animate={{ ry: Math.max(2, bocaScale * 9) }}
                 fill="#331111"
                 transition={{ type: "spring", stiffness: 400 }}
               />
             ) : (
               <motion.path 
-                d="M -4.5 0 Q 0 3 4.5 0" 
+                d="M -4 0 Q 0 3 4 0" 
                 fill="none" 
                 stroke="black" 
-                strokeWidth="1.8" 
-                opacity="0.5"
+                strokeWidth="2.2" 
+                strokeLinecap="round"
+                opacity="0.6"
               />
             )}
           </motion.g>
