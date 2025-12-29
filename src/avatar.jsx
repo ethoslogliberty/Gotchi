@@ -1,27 +1,33 @@
 // src/avatar.jsx
-import { motion, useSpring, useTransform } from 'framer-motion'
+import { motion, useSpring } from 'framer-motion'
 import { useState, useEffect } from 'react'
 
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
 
-  // FÍSICAS ELÁSTICAS PARA EL CUERPO
-  // Esto hace que el movimiento no sea lineal, sino que tenga "inercia"
-  const springConfig = { stiffness: 150, damping: 15 };
-  const dx = useSpring(mouse.x, springConfig);
-  const dy = useSpring(mouse.y, springConfig);
+  // CONFIGURACIÓN ELÁSTICA (Evita vibraciones y da fluidez)
+  const springConfig = { stiffness: 120, damping: 20 };
+  const springX = useSpring(0, springConfig);
+  const springY = useSpring(0, springConfig);
 
+  // Actualizamos los resortes con la posición del mouse
+  useEffect(() => {
+    springX.set(mouse.x * 0.8);
+    springY.set(mouse.y * 0.8);
+  }, [mouse, springX, springY]);
+
+  // LÓGICA DE PARPADEO ORGÁNICO
   useEffect(() => {
     const blinkInterval = setInterval(() => {
       setBlink(true);
-      setTimeout(() => setBlink(false), 120);
+      setTimeout(() => setBlink(false), 100);
     }, Math.random() * 3000 + 4000);
     return () => clearInterval(blinkInterval);
   }, []);
 
   const isThinking = status?.includes("Reflexionando");
 
-  // COMPONENTE DE OJO CON SEGUIMIENTO FLUIDO
+  // COMPONENTE DE OJO ESTABILIZADO (Fuera del ruido de renderizado)
   const Ojo = ({ cx, cy }) => (
     <motion.g 
       animate={{ scaleY: blink ? 0.05 : (isThinking ? 0.6 : 1) }}
@@ -31,7 +37,7 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
       <circle cx={cx} cy={cy} r="6" fill="white" />
       <motion.circle 
         cx={cx} cy={cy} r="2.8" fill="black"
-        style={{ x: dx, y: dy }} 
+        style={{ x: springX, y: springY }} // Usa el resorte suavizado
       />
     </motion.g>
   );
@@ -39,61 +45,54 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
   return (
     <motion.div 
       onClick={onClick}
-      style={{ cursor: 'pointer', filter: 'url(#gooey-effect)' }} // Aplicamos el filtro de fusión
-      whileTap={{ scale: 0.85 }}
+      style={{ cursor: 'pointer', position: 'relative' }}
+      whileTap={{ scale: 0.9 }}
     >
       <svg width="280" height="280" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
         <defs>
-          {/* FILTRO PROFESIONAL GOOEY (Efecto de fusión de fluidos) */}
-          <filter id="gooey-effect">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+          {/* FILTRO DE FUSIÓN ORGÁNICA (GOOEY) */}
+          <filter id="azulito-fluid-filter">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
             <feColorMatrix in="blur" mode="matrix" 
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>
 
-        {/* CUERPO MULTI-CAPA PARA LOGRAR FLUIDEZ */}
-        <g fill={color}>
-          {/* Capa base que respira */}
+        {/* CUERPO LÍQUIDO (Solo esto lleva el filtro de deformación) */}
+        <g style={{ filter: 'url(#azulito-fluid-filter)' }} fill={color}>
+          {/* Esfera central */}
           <motion.circle
-            cx="50" cy="55"
+            cx="50" cy="50"
             animate={{ 
-              r: isSpeaking ? [30, 32, 30] : [28, 29, 28],
-              scaleX: isSpeaking ? [1, 1.1, 1] : 1
+              r: isSpeaking ? [28, 30, 28] : [27, 28, 27],
+              scaleY: isSpeaking ? [1, 1.05, 1] : 1
             }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* "Gota" superior que le da forma orgánica */}
-          <motion.circle
-            cx="50" cy="45"
-            animate={{ 
-              y: isSpeaking ? [-2, 2, -2] : [0, -3, 0],
-              scale: isSpeaking ? 1.2 : 1.1
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Lados que reaccionan al movimiento del mouse (Inercia de fluido) */}
-          <motion.circle cx="35" cy="55" r="15" style={{ x: dx, y: dy }} />
-          <motion.circle cx="65" cy="55" r="15" style={{ x: dx, y: dy }} />
+          {/* Gotas laterales que reaccionan a la inercia */}
+          <motion.circle cx="35" cy="50" r="16" style={{ x: springX, y: springY }} />
+          <motion.circle cx="65" cy="50" r="16" style={{ x: springX, y: springY }} />
+          <motion.circle cx="50" cy="35" r="14" style={{ y: springY }} />
         </g>
 
-        {/* CARA (Fuera del filtro gooey para que no se deforme el dibujo) */}
-        <g style={{ filter: 'none' }}>
-          <Ojo cx={42} cy={48} />
-          <Ojo cx={58} cy={48} />
+        {/* ROSTRO ESTABILIZADO (Sin filtro para evitar que los ojos vibren o se vean borrosos) */}
+        <g>
+          <Ojo cx={42} cy={46} />
+          <Ojo cx={58} cy={46} />
 
           <motion.g transform="translate(50, 68)">
             <motion.ellipse
               cx="0" cy="0" rx="6"
               animate={{ 
-                ry: Math.max(0, 1 + bocaScale * 7), 
+                ry: Math.max(0, 0.5 + bocaScale * 7), 
                 opacity: isSpeaking ? 1 : 0 
               }}
               fill="#220000"
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
             />
             {!isSpeaking && (
-              <path d="M -4 0 Q 0 1.5 4 0" fill="none" stroke="#000" strokeWidth="1" opacity="0.3" />
+              <path d="M -4 0 Q 0 1.5 4 0" fill="none" stroke="#000" strokeWidth="1.2" opacity="0.4" />
             )}
           </motion.g>
         </g>
