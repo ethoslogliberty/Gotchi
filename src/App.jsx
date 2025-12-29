@@ -2,14 +2,15 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMotion } from './useMotion'
 import { useMemory } from './useMemory'
-import { procesarRespuestaIA } from './interaccion'
+import { procesarRespuestaIA, PERSONALIDAD_AZULITO, ajustarVoz } from './interaccion'
 import { useMousePosition } from './useMousePosition'
 import { useAmbience } from './useAmbience'
+import { useSpeech } from './useSpeech' // Nuevo Hook de Oído
 import { Avatar } from './avatar.jsx' 
 import './App.css'
 
 function App() {
-  // 1. DECLARACIÓN DE TODOS LOS HOOKS
+  // 1. DECLARACIÓN DE HOOKS (Core & Percepción)
   const mouse = useMousePosition(); 
   const { startAmbience, stopAmbience } = useAmbience();
   const { historial, setHistorial, borrarMemoria } = useMemory();
@@ -24,7 +25,12 @@ function App() {
 
   const animations = useMotion(status);
 
-  // 2. LÓGICA DE AGENTE PROACTIVO (Reloj de iniciativa)
+  // IMPLEMENTACIÓN DE OÍDO (Speech-to-Text Modular)
+  const { startListening, isListening } = useSpeech((textoEscuchado) => {
+    responderIA(textoEscuchado);
+  });
+
+  // 2. LÓGICA DE AGENTE PROACTIVO
   useEffect(() => {
     const timerInactividad = setTimeout(() => {
       if (!isSpeaking && !status.includes("Reflexionando")) {
@@ -37,7 +43,7 @@ function App() {
     return () => clearTimeout(timerInactividad);
   }, [status, isSpeaking]);
 
-  // 3. FUNCIONES DE LÓGICA
+  // 3. FUNCIONES DE LÓGICA (El Core)
   const toggleMusica = useCallback((e) => {
     if (e) e.stopPropagation();
     setIsMuted((prevMuted) => {
@@ -47,80 +53,63 @@ function App() {
     });
   }, [startAmbience, stopAmbience]);
 
-  const hablarConVozFemenina = (texto) => {
+  const hablar = (texto) => {
     window.speechSynthesis.cancel();
     const mensaje = new SpeechSynthesisUtterance(texto.replace(/[*_#~]/g, ''));
     
-    // Configuración para España
-    mensaje.lang = 'es-ES'; 
+    // Aplicamos el "Tuneo" Rioplatense definido en el Core
+    ajustarVoz(mensaje);
 
-    const obtenerVozYHablar = () => {
-      const voces = window.speechSynthesis.getVoices();
-      
-      // Buscamos específicamente voces de España. Google Español es la mejor.
-      const vozIdeal = voces.find(v => v.lang === 'es-ES' || v.name.includes('Spain')) || 
-                       voces.find(v => v.lang.includes('es'));
-
-      if (vozIdeal) {
-        mensaje.voice = vozIdeal;
-      }
-
-      mensaje.pitch = 1.0; 
-      mensaje.rate = 1.0; // Velocidad normal para España
-
-      let mouthInterval;
-      mensaje.onstart = () => {
-        setIsSpeaking(true);
-        mouthInterval = setInterval(() => setBocaScale(Math.random() * 0.7 + 0.3), 80); 
-      };
-
-      mensaje.onend = () => {
-        clearInterval(mouthInterval);
-        setIsSpeaking(false);
-        setBocaScale(0);
-        setStatus("Estoy aquí contigo.");
-        setColor("#3b82f6");
-      };
-
-      window.speechSynthesis.speak(mensaje);
+    let mouthInterval;
+    mensaje.onstart = () => {
+      setIsSpeaking(true);
+      mouthInterval = setInterval(() => setBocaScale(Math.random() * 0.7 + 0.3), 80); 
     };
 
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = obtenerVozYHablar;
-    } else {
-      obtenerVozYHablar();
-    }
+    mensaje.onend = () => {
+      clearInterval(mouthInterval);
+      setIsSpeaking(false);
+      setBocaScale(0);
+      setStatus("Estoy aquí contigo.");
+      setColor("#3b82f6");
+    };
+
+    window.speechSynthesis.speak(mensaje);
   };
 
   const responderIA = async (msg) => {
+    // --- CAPA DE EXPANSIÓN (Futura: Hooks de entrada) ---
     setColor("#a855f7"); 
     setStatus("Reflexionando...");
+    
     try {
+      // Usamos el prompt de PERSONALIDAD_AZULITO que maneja respuestas dinámicas
       const respuestaIA = await procesarRespuestaIA(msg, historial, import.meta.env.VITE_GROQ_API_KEY);
+      
       setHistorial([...historial, { role: "user", content: msg }, { role: "assistant", content: respuestaIA }]);
-      hablarConVozFemenina(respuestaIA);
+      hablar(respuestaIA);
+
+      // --- CAPA DE EXPANSIÓN (Futura: Capa de Bitácora/Blog) ---
+      // if (config.archivar) archivarReflexion(msg, respuestaIA);
+
     } catch (error) {
+      console.error("Error en el Core:", error);
       setColor("#3b82f6");
       setStatus("Vaya, parece que tengo un problema de conexión...");
     }
   };
 
   const manejarInteraccionPrincipal = () => {
+    // Iniciamos ambiente si es la primera vez
     if (!musicaIniciada && !isMuted) {
       startAmbience();
       setMusicaIniciada(true);
     }
-    const oido = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     
-    // Configuramos el oído para que entienda el español de España
-    oido.lang = 'es-ES'; 
-    
-    oido.onresult = (e) => responderIA(e.results[0][0].transcript);
-    try { 
-      oido.start(); 
-      setStatus("Te escucho..."); 
-      setColor("#fde047"); 
-    } catch(e){}
+    // Activamos el oído modular
+    startListening();
+    setStatus("Te escucho..."); 
+    setColor("#fde047"); 
   };
 
   return (
@@ -129,6 +118,7 @@ function App() {
         {isMuted ? "🔇" : "🔊"}
       </button>
 
+      {/* Partículas reactivas al Core */}
       {particulas.map((_, i) => (
         <motion.div
           key={i} className="particula"
@@ -139,7 +129,7 @@ function App() {
         />
       ))}
 
-      <div className="gotchi-aura">
+      <div className={`gotchi-aura ${isListening ? 'escuchando' : ''}`}>
         <Avatar 
           color={color} mouse={mouse} animations={animations} 
           bocaScale={bocaScale} isSpeaking={isSpeaking}
@@ -147,8 +137,8 @@ function App() {
         />
       </div>
       
-      <p style={{ color: 'white', opacity: 0.8, marginTop: '25px', zIndex: 10, textAlign: 'center', transition: '0.5s' }}>
-        {status}
+      <p className="status-text">
+        {isListening ? "Te estoy escuchando..." : status}
       </p>
 
      <form onSubmit={(e) => {
@@ -159,13 +149,19 @@ function App() {
           input.value = ""; 
         }
       }} style={{ zIndex: 10 }}>
-        <input name="chatInput" type="text" placeholder="Charlemos un rato..." className="chat-input" />
+        <input 
+          name="chatInput" 
+          type="text" 
+          placeholder="Hablá o escribí..." 
+          className="chat-input" 
+          disabled={isListening}
+        />
       </form>
 
       <button 
         onClick={() => {
           borrarMemoria();
-          setStatus("Memoria limpia. Soy una página en blanco.");
+          setStatus("Memoria limpia.");
           setColor("#3b82f6");
         }} 
         className="btn-reset"
