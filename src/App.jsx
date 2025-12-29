@@ -6,8 +6,10 @@ import { useMousePosition } from './useMousePosition'
 import { useAmbience } from './useAmbience'
 import { useSpeech } from './useSpeech' 
 import { Avatar } from './avatar.jsx' 
-import { PERSONALIDAD_AZULITO, ajustarVoz, prepararTextoParaVoz } from './interaccion'
+// CORRECCIÓN AQUÍ: Agregamos procesarRespuestaIA a la lista
+import { procesarRespuestaIA, PERSONALIDAD_AZULITO, ajustarVoz, prepararTextoParaVoz } from './interaccion'
 import './App.css'
+
 
 function App() {
   // 1. DECLARACIÓN DE HOOKS (Core & Percepción)
@@ -129,14 +131,18 @@ function App() {
         />
       ))}
 
-      <div className={`gotchi-aura ${isListening ? 'escuchando' : ''}`}>
-        <Avatar 
-          color={color} mouse={mouse} animations={animations} 
-          bocaScale={bocaScale} isSpeaking={isSpeaking}
-          onClick={manejarInteraccionPrincipal} 
-        />
-      </div>
-      
+<div className={`gotchi-aura ${isListening ? 'escuchando' : ''}`}>
+  <Avatar 
+    color={color} 
+    mouse={mouse} 
+    animations={animations} 
+    bocaScale={bocaScale} 
+    isSpeaking={isSpeaking}
+    status={status} // <--- AGREGÁ ESTO PARA LAS EXPRESIONES
+    onClick={manejarInteraccionPrincipal} 
+  />
+</div>
+
       <p className="status-text">
         {isListening ? "Te estoy escuchando..." : status}
       </p>
