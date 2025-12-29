@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMotion } from './useMotion'
 import { useMemory } from './useMemory'
-import { procesarRespuestaIA, PERSONALIDAD_AZULITO, ajustarVoz } from './interaccion'
 import { useMousePosition } from './useMousePosition'
 import { useAmbience } from './useAmbience'
-import { useSpeech } from './useSpeech' // Nuevo Hook de Oído
+import { useSpeech } from './useSpeech' 
 import { Avatar } from './avatar.jsx' 
+import { PERSONALIDAD_AZULITO, ajustarVoz, prepararTextoParaVoz } from './interaccion'
 import './App.css'
 
 function App() {
