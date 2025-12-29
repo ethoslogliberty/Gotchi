@@ -1,30 +1,43 @@
-// src/avatar.jsx - VERSIÓN FINAL PERFECTA
+// src/avatar.jsx
 import { motion, useSpring } from 'framer-motion'
 import { useState, useEffect, memo } from 'react'
 
 const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking }) => (
   <motion.g 
+    // Ahora TODO el ojo (blanco y pupila) se desplaza levemente con el mouse
+    style={{ 
+      x: springX * 0.2, 
+      y: springY * 0.2 
+    }}
     animate={{ scaleY: blink ? 0.05 : (isThinking ? 0.6 : 1) }}
     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-    style={{ originX: `${cx}%`, originY: `${cy}%` }}
   >
-    <circle cx={cx} cy={cy} r="5.5" fill="white" />
+    {/* El fondo blanco del ojo */}
+    <circle cx={cx} cy={cy} r="6" fill="white" />
+    
+    {/* La pupila se mueve MÁS que el fondo para dar efecto 3D */}
     <motion.circle 
-      cx={cx} cy={cy} r="2.5" fill="black"
-      style={{ x: springX, y: springY }} 
+      cx={cx} cy={cy} r="2.8" fill="black"
+      style={{ 
+        x: springX * 0.6, 
+        y: springY * 0.6 
+      }} 
     />
   </motion.g>
 ));
 
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
-  const springConfig = { stiffness: 80, damping: 20, mass: 1 }; // Más pesado, más fluido
+
+  // Configuración de resortes para suavizar el movimiento
+  const springConfig = { stiffness: 100, damping: 25, mass: 0.5 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
 
   useEffect(() => {
-    springX.set(mouse.x * 10); // Más rango de movimiento
-    springY.set(mouse.y * 10);
+    // Normalizamos el movimiento
+    springX.set(mouse.x);
+    springY.set(mouse.y);
   }, [mouse.x, mouse.y, springX, springY]);
 
   useEffect(() => {
@@ -39,54 +52,46 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
 
   return (
     <motion.div onClick={onClick} style={{ cursor: 'pointer', position: 'relative' }}>
-      <svg width="300" height="300" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
+      <svg width="280" height="280" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
         <defs>
-          {/* FILTRO GOOEY PROFESIONAL REFORZADO */}
-          <filter id="final-gooey">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+          <filter id="azulito-fluid-filter">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
             <feColorMatrix in="blur" mode="matrix" 
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="goo" />
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
-          {/* DEGRADADO PARA DAR VOLUMEN */}
-          <radialGradient id="bodyGradient" cx="50%" cy="40%" r="50%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor={color} />
-          </radialGradient>
         </defs>
 
-        {/* CUERPO - Ahora es una masa única fusionada */}
-        <g style={{ filter: 'url(#final-gooey)' }}>
-          <motion.circle
-            cx="50" cy="50" fill="url(#bodyGradient)"
-            animate={{ 
-              r: isSpeaking ? [28, 32, 28] : [27, 28, 27],
-              scaleX: isSpeaking ? [1, 1.08, 1] : 1
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          {/* Partes que se fusionan con el centro según el mouse */}
-          <motion.circle cx="35" cy="50" r="18" fill="url(#bodyGradient)" style={{ x: springX, y: springY }} />
-          <motion.circle cx="65" cy="50" r="18" fill="url(#bodyGradient)" style={{ x: springX, y: springY }} />
-          <motion.circle cx="50" cy="35" r="15" fill="url(#bodyGradient)" style={{ y: springY }} />
+        {/* CUERPO LÍQUIDO (Se deforma levemente con el mouse) */}
+        <g style={{ filter: 'url(#azulito-fluid-filter)' }} fill={color}>
+          <motion.circle cx="50" cy="50" r="28" />
+          <motion.circle cx="35" cy="50" r="16" style={{ x: springX * 0.5, y: springY * 0.5 }} />
+          <motion.circle cx="65" cy="50" r="16" style={{ x: springX * 0.5, y: springY * 0.5 }} />
         </g>
 
-        {/* ROSTRO - Limpio y centrado */}
-        <g pointerEvents="none">
+        {/* ROSTRO UNIFICADO (Toda la cara se mueve junta) */}
+        <motion.g 
+          style={{ 
+            x: springX * 0.4, // El rostro sigue al mouse suavemente
+            y: springY * 0.4 
+          }}
+        >
           <Ojo cx={42} cy={46} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
           <Ojo cx={58} cy={46} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
 
+          {/* BOCA (Ahora también sigue el movimiento facial) */}
           <motion.g transform="translate(50, 68)">
             <motion.ellipse
               cx="0" cy="0" rx="6"
-              animate={{ ry: isSpeaking ? Math.max(1, bocaScale * 9) : 0 }}
+              animate={{ ry: isSpeaking ? Math.max(0.5, bocaScale * 7.5) : 0 }}
               fill="#220000"
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              style={{ opacity: isSpeaking ? 1 : 0 }}
             />
             {!isSpeaking && (
-              <path d="M -4 0 Q 0 2 4 0" fill="none" stroke="#000" strokeWidth="1.5" opacity="0.4" />
+              <path d="M -4 0 Q 0 1.5 4 0" fill="none" stroke="#000" strokeWidth="1.2" opacity="0.4" />
             )}
           </motion.g>
-        </g>
+        </motion.g>
       </svg>
     </motion.div>
   );
