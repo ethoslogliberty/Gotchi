@@ -1,17 +1,27 @@
-// src/avatar.jsx - VERSIÓN "TERNURA Y FLUIDEZ"
+// src/avatar.jsx - VERSIÓN FINAL: TERNURA + PARPADEO GARANTIZADO
 import { motion, useSpring } from 'framer-motion'
 import { useState, useEffect, memo } from 'react'
 
 const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking }) => (
   <motion.g 
-    style={{ x: springX * 0.12, y: springY * 0.12 }}
-    animate={{ scaleY: blink ? 0.01 : (isThinking ? 0.6 : 1) }}
-    transition={{ duration: 0.08 }} // Parpadeo más rápido y marcado
+    style={{ x: springX * 0.15, y: springY * 0.15 }}
   >
-    <circle cx={cx} cy={cy} r="6.5" fill="white" /> {/* Ojos un poco más grandes = más tierno */}
+    {/* Fondo blanco del ojo */}
+    <circle cx={cx} cy={cy} r="7" fill="white" />
+    
+    {/* Pupila que sigue al mouse */}
     <motion.circle 
-      cx={cx} cy={cy} r="3" fill="black"
-      style={{ x: springX * 0.4, y: springY * 0.4 }} 
+      cx={cx} cy={cy} r="3.2" fill="black"
+      style={{ x: springX * 0.45, y: springY * 0.45 }} 
+    />
+
+    {/* PÁRPADO: Esto garantiza que el parpadeo se vea */}
+    <motion.ellipse
+      cx={cx} cy={cy - 8} rx="8" ry="8"
+      fill="#3b82f6" // Color igual al cuerpo para que parezca que cierra la piel
+      initial={{ y: -10 }}
+      animate={{ y: blink ? 8 : -10 }}
+      transition={{ duration: 0.1, ease: "easeInOut" }}
     />
   </motion.g>
 ));
@@ -19,25 +29,30 @@ const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking }) => (
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
 
-  // FÍSICAS MÁS REBOTINES (Stiffness más alto para que se mueva más)
-  const springConfig = { stiffness: 150, damping: 15, mass: 0.6 };
+  // Físicas suaves pero reactivas
+  const springConfig = { stiffness: 120, damping: 12, mass: 0.5 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
 
   useEffect(() => {
-    // Aumentamos el multiplicador para que el movimiento se note más
-    springX.set(mouse.x * 15); 
-    springY.set(mouse.y * 15);
+    springX.set(mouse.x * 12); 
+    springY.set(mouse.y * 12);
   }, [mouse.x, mouse.y, springX, springY]);
 
-  // PARPADEO CORREGIDO: Intervalo más corto y reactivo
+  // LÓGICA DE PARPADEO REFORZADA
   useEffect(() => {
-    const triggerBlink = () => {
-      setBlink(true);
-      setTimeout(() => setBlink(false), 150); // Tiempo visible de parpadeo
+    const loop = () => {
+      const randomTime = Math.random() * 3000 + 2000;
+      setTimeout(() => {
+        setBlink(true);
+        setTimeout(() => {
+          setBlink(false);
+          loop();
+        }, 150); // Duración del parpadeo
+      }, randomTime);
     };
-    const timer = setInterval(triggerBlink, 3000 + Math.random() * 2000);
-    return () => clearInterval(timer);
+    loop();
+    return () => setBlink(false);
   }, []);
 
   const isThinking = status?.includes("Reflexionando");
@@ -51,50 +66,48 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
     >
       <svg width="280" height="280" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
         <defs>
-          <filter id="gooey-tierno">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur" />
+          <filter id="gooey-perfect">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
             <feColorMatrix in="blur" mode="matrix" 
               values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>
 
-        {/* CUERPO: Eliminamos el círculo de la frente y suavizamos la forma */}
-        <g style={{ filter: 'url(#gooey-tierno)' }} fill={color}>
-          {/* Cuerpo principal (más redondito) */}
+        {/* CUERPO: 3 Esferas (Centro + Cachetes) - Sin bulto en la frente */}
+        <g style={{ filter: 'url(#gooey-perfect)' }} fill={color}>
+          {/* Centro / Abdomen */}
           <motion.circle
-            cx="50" cy="55"
-            animate={{ 
-              r: isSpeaking ? [30, 32, 30] : [29, 30, 29],
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            cx="50" cy="60"
+            animate={{ r: isSpeaking ? [31, 33, 31] : [30, 31, 30] }}
+            transition={{ duration: 2, repeat: Infinity }}
           />
-          {/* Cachetes/Base que reacciona al mouse */}
-          <motion.circle cx="38" cy="60" r="18" style={{ x: springX * 0.3, y: springY * 0.3 }} />
-          <motion.circle cx="62" cy="60" r="18" style={{ x: springX * 0.3, y: springY * 0.3 }} />
+          {/* Cachetes que dan la forma tierna y ancha */}
+          <motion.circle cx="35" cy="62" r="20" style={{ x: springX * 0.2, y: springY * 0.2 }} />
+          <motion.circle cx="65" cy="62" r="20" style={{ x: springX * 0.2, y: springY * 0.2 }} />
         </g>
 
-        {/* CARA: Unificada y más abajo para que sea "Kawaii" */}
-        <motion.g style={{ x: springX * 0.5, y: springY * 0.5 }}>
-          <Ojo cx={40} cy={52} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
-          <Ojo cx={60} cy={52} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
+        {/* ROSTRO UNIFICADO: Ojos grandes y abajo (Kawaii) */}
+        <motion.g style={{ x: springX * 0.6, y: springY * 0.6 }}>
+          <Ojo cx={40} cy={55} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
+          <Ojo cx={60} cy={55} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
 
-          {/* BOCA: Siempre visible (o como sonrisa o abierta) */}
-          <motion.g transform="translate(50, 72)">
+          {/* BOCA: Sonrisa o Habla */}
+          <motion.g transform="translate(50, 75)">
             {isSpeaking ? (
               <motion.ellipse
                 cx="0" cy="0" rx="5"
-                animate={{ ry: Math.max(1, bocaScale * 7) }}
+                animate={{ ry: Math.max(1.5, bocaScale * 8) }}
                 fill="#331111"
                 transition={{ type: "spring", stiffness: 400 }}
               />
             ) : (
               <motion.path 
-                d="M -4 0 Q 0 2.5 4 0" 
+                d="M -5 0 Q 0 3 5 0" 
                 fill="none" 
-                stroke="#000" 
-                strokeWidth="1.5" 
-                opacity="0.5"
+                stroke="black" 
+                strokeWidth="1.8" 
+                opacity="0.6"
               />
             )}
           </motion.g>
