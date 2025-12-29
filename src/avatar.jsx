@@ -2,7 +2,6 @@
 import { motion, useSpring } from 'framer-motion'
 import { useState, useEffect, memo } from 'react'
 
-// COMPONENTE OJO MEMORIZADO: No se re-renderiza con la boca
 const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking }) => (
   <motion.g 
     animate={{ scaleY: blink ? 0.05 : (isThinking ? 0.6 : 1) }}
@@ -20,7 +19,6 @@ const Ojo = memo(({ cx, cy, springX, springY, blink, isThinking }) => (
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
 
-  // Resortes con suavizado extremo para eliminar ruido
   const springConfig = { stiffness: 100, damping: 25, mass: 0.5 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
@@ -56,13 +54,11 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
           </filter>
         </defs>
 
-        {/* CUERPO LÍQUIDO CON FILTRO */}
+        {/* CUERPO LÍQUIDO */}
         <g style={{ filter: 'url(#azulito-fluid-filter)' }} fill={color}>
           <motion.circle
             cx="50" cy="50"
-            animate={{ 
-              r: isSpeaking ? [27.5, 29, 27.5] : [27, 27.5, 27],
-            }}
+            animate={{ r: isSpeaking ? [27.5, 29, 27.5] : [27, 27.5, 27] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.circle cx="35" cy="50" r="16" style={{ x: springX, y: springY }} />
@@ -70,25 +66,33 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
           <motion.circle cx="50" cy="35" r="14" style={{ y: springY }} />
         </g>
 
-        {/* ROSTRO TOTALMENTE ESTABILIZADO */}
+        {/* ROSTRO (Ojos y Boca juntos para misma prioridad) */}
         <g pointerEvents="none">
           <Ojo cx={42} cy={46} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
           <Ojo cx={58} cy={46} springX={springX} springY={springY} blink={blink} isThinking={isThinking} />
 
-          {/* BOCA: Único elemento que vibra/se mueve al hablar */}
+          {/* BOCA CORREGIDA */}
           <motion.g transform="translate(50, 68)">
+            {/* 1. Fondo de la boca abierta (Solo si habla) */}
             <motion.ellipse
-              cx="0" cy="0" rx="6"
+              cx="0" cy="0" rx="7"
               animate={{ 
-                ry: Math.max(0, 0.5 + bocaScale * 7.5)
+                ry: isSpeaking ? Math.max(0.5, bocaScale * 8) : 0,
+                opacity: isSpeaking ? 1 : 0 
               }}
               fill="#220000"
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              style={{ opacity: isSpeaking ? 1 : 0 }}
             />
-            {!isSpeaking && (
-              <path d="M -4 0 Q 0 1.5 4 0" fill="none" stroke="#000" strokeWidth="1.2" opacity="0.3" />
-            )}
+            
+            {/* 2. Línea de la boca/sonrisa (Solo si NO habla) */}
+            <motion.path
+              d="M -5 0 Q 0 2 5 0"
+              fill="none"
+              stroke="black"
+              strokeWidth="1.5"
+              animate={{ opacity: isSpeaking ? 0 : 0.4 }}
+              transition={{ duration: 0.2 }}
+            />
           </motion.g>
         </g>
       </svg>
