@@ -1,17 +1,32 @@
-// src/avatar.jsx - VERSIÓN "MIRADA PROTEGIDA" (Kawaii & No-Clip)
+// src/avatar.jsx - VERSIÓN "LÍMITES SEGUROS" (Anti-desvío de ojos)
 import { motion, useSpring, useTransform } from 'framer-motion'
 import { useState, useEffect, memo } from 'react'
 
 const Ojo = memo(({ cx, cy, springX, springY, blink }) => {
-  // Transformaciones para el seguimiento dinámico
-  const eyeX = useTransform(springX, (v) => v * 0.15);
-  const eyeY = useTransform(springY, (v) => v * 0.15);
-  const pupilX = useTransform(springX, (v) => v * 0.5);
-  const pupilY = useTransform(springY, (v) => v * 0.5);
-  const brilloX = useTransform(springX, (v) => v * 0.6);
-  const brilloY = useTransform(springY, (v) => v * 0.6);
+  // --- LÓGICA DE LÍMITE PARA LAS PUPILAS ---
+  const MAX_EYE_MOVE = 3.5; // Máximo que puede moverse la pupila dentro del ojo
 
-  // ID único para cada máscara de recorte según su posición
+  const pupilX = useTransform(springX, (v) => {
+    const x = v * 0.5;
+    const y = springY.get() * 0.5;
+    const distance = Math.sqrt(x * x + y * y);
+    if (distance <= MAX_EYE_MOVE) return x;
+    return (x / distance) * MAX_EYE_MOVE;
+  });
+
+  const pupilY = useTransform(springY, (v) => {
+    const x = springX.get() * 0.5;
+    const y = v * 0.5;
+    const distance = Math.sqrt(x * x + y * y);
+    if (distance <= MAX_EYE_MOVE) return y;
+    return (y / distance) * MAX_EYE_MOVE;
+  });
+
+  const eyeX = useTransform(pupilX, (v) => v * 0.3);
+  const eyeY = useTransform(pupilY, (v) => v * 0.3);
+  const brilloX = useTransform(pupilX, (v) => v * 1.2);
+  const brilloY = useTransform(pupilY, (v) => v * 1.2);
+
   const clipId = `eye-clip-${cx.toString().replace('.', '')}`;
 
   return (
@@ -21,24 +36,16 @@ const Ojo = memo(({ cx, cy, springX, springY, blink }) => {
       transition={{ duration: 0.08 }}
     >
       <defs>
-        {/* Definimos el área permitida (el círculo blanco) */}
         <clipPath id={clipId}>
           <circle cx={cx} cy={cy} r="8.5" />
         </clipPath>
       </defs>
-
-      {/* Fondo blanco del ojo */}
       <circle cx={cx} cy={cy} r="8.5" fill="white" /> 
-      
-      {/* Grupo RECORTADO: Nada de lo que esté aquí adentro saldrá del ojo */}
       <g clipPath={`url(#${clipId})`}>
-        {/* Pupila */}
         <motion.circle 
           cx={cx} cy={cy} r="4.5" fill="black"
           style={{ x: pupilX, y: pupilY }} 
         />
-        
-        {/* Brillo Kawaii */}
         <motion.circle 
           cx={cx - 2.5} cy={cy - 2.5} r="2" fill="white"
           style={{ x: brilloX, y: brilloY }} 
@@ -51,24 +58,37 @@ const Ojo = memo(({ cx, cy, springX, springY, blink }) => {
 export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpeaking, status }) => {
   const [blink, setBlink] = useState(false);
 
-  // Físicas elásticas (Rebotín)
   const springConfig = { stiffness: 180, damping: 15, mass: 0.5 };
   const springX = useSpring(0, springConfig);
   const springY = useSpring(0, springConfig);
 
-  // Transformaciones para el cuerpo y la cara
-  const faceX = useTransform(springX, (v) => v * 0.4);
-  const faceY = useTransform(springY, (v) => v * 0.4);
-  const bodyX = useTransform(springX, (v) => v * 0.2);
-  const bodyY = useTransform(springY, (v) => v * 0.2);
+  // --- LÓGICA DE LÍMITE PARA LA CARA ---
+  const MAX_FACE_MOVE = 7; // El límite del "eje" del rostro
+
+  const faceX = useTransform(springX, (v) => {
+    const x = v * 0.4;
+    const y = springY.get() * 0.4;
+    const distance = Math.sqrt(x * x + y * y);
+    if (distance <= MAX_FACE_MOVE) return x;
+    return (x / distance) * MAX_FACE_MOVE;
+  });
+
+  const faceY = useTransform(springY, (v) => {
+    const x = springX.get() * 0.4;
+    const y = v * 0.4;
+    const distance = Math.sqrt(x * x + y * y);
+    if (distance <= MAX_FACE_MOVE) return y;
+    return (y / distance) * MAX_FACE_MOVE;
+  });
+
+  const bodyX = useTransform(faceX, (v) => v * 0.3);
+  const bodyY = useTransform(faceY, (v) => v * 0.3);
 
   useEffect(() => {
-    // Escalamiento del mouse para un rango de movimiento natural
     springX.set((mouse.x || 0) * 15); 
     springY.set((mouse.y || 0) * 15);
   }, [mouse.x, mouse.y, springX, springY]);
 
-  // Parpadeo tierno y rítmico
   useEffect(() => {
     const loop = () => {
       const randomTime = 2000 + Math.random() * 3000;
@@ -101,7 +121,6 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
           </filter>
         </defs>
 
-        {/* CUERPO: Gota de agua tierna */}
         <g style={{ filter: 'url(#gooey-final-kawaii)' }} fill={color}>
           <motion.circle
             cx="50" cy="65"
@@ -112,12 +131,10 @@ export const Avatar = ({ color, mouse, animations, bocaScale = 0, onClick, isSpe
           <motion.circle cx="65" cy="70" r="22" style={{ x: bodyX, y: bodyY }} />
         </g>
 
-        {/* CARA UNIFICADA */}
         <motion.g style={{ x: faceX, y: faceY }}>
           <Ojo cx={38} cy={64} springX={springX} springY={springY} blink={blink} />
           <Ojo cx={62} cy={64} springX={springX} springY={springY} blink={blink} />
 
-          {/* BOCA */}
           <motion.g transform="translate(50, 78)">
             {isSpeaking ? (
               <motion.ellipse
