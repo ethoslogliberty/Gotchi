@@ -1,19 +1,25 @@
-/* src/App.css */
+/* src/App.css - VERSIÓN FINAL UNIFICADA Y CORREGIDA */
 :root {
   --color-azulito: #3b82f6;
   --color-brillo: #a5f3fc;
+  --bg-gradient: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.15);
 }
 
 body {
   margin: 0;
   overflow: hidden;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #020617;
+  color: white;
 }
 
 .contenedor-gotchi {
   position: relative;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+  background: var(--bg-gradient);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -21,120 +27,231 @@ body {
   overflow: hidden;
 }
 
-/* Las partículas ahora tienen z-index 1 */
+/* --- EFECTO NEBULOSA DINÁMICA --- */
+.contenedor-gotchi::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  animation: pulso-fondo 20s infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes pulso-fondo {
+  from { transform: translate(-5%, -5%) scale(1); }
+  to { transform: translate(5%, 5%) scale(1.1); }
+}
+
+/* --- PARTÍCULAS --- */
 .particula {
   position: absolute;
   background: white;
   border-radius: 50%;
-  box-shadow: 0 0 10px white;
-  filter: blur(1px);
+  box-shadow: 0 0 15px white;
   z-index: 1;
   pointer-events: none;
 }
 
-/* El Aura y el Gotchi tienen z-index 10 para estar al frente */
+/* --- AZULITO CORE (Aura y Sombra) --- */
 .gotchi-aura {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 10;
+  filter: drop-shadow(0 0 40px rgba(59, 130, 246, 0.4));
 }
 
-.gotchi-aura::before {
+.gotchi-aura::after {
   content: '';
   position: absolute;
-  width: 180px;
-  height: 180px;
-  background: var(--color-azulito);
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-  filter: blur(40px);
-  opacity: 0.3;
-  animation: aura-giratoria 10s infinite linear;
+  bottom: -80px;
+  width: 100px;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.4);
+  filter: blur(10px);
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulso-sombra 4s infinite ease-in-out;
 }
 
-@keyframes aura-giratoria {
-  from { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.3); }
-  to { transform: rotate(360deg) scale(1); }
+@keyframes pulso-sombra {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.3); opacity: 0.15; }
 }
 
-/* Estilos de UI con Glassmorphism */
-input {
-  margin-top: 30px;
-  padding: 12px 25px;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+/* --- STATUS TEXT Y CHAT --- */
+.status-text {
+  margin-top: 25px;
+  font-size: 1.2rem !important;
+  font-weight: 300;
+  color: var(--color-brillo) !important;
+  text-shadow: 0 0 15px rgba(165, 243, 252, 0.5);
+  z-index: 10;
   text-align: center;
-  backdrop-filter: blur(15px);
-  transition: all 0.3s ease;
-  width: 250px;
+  min-height: 1.6em;
 }
 
-/* Añade o reemplaza esto en App.css */
+.chat-input {
+  margin-top: 20px;
+  padding: 15px 30px;
+  border-radius: 50px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: white;
+  font-size: 1.1rem;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  width: 320px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.chat-input:focus {
+  width: 380px;
+  border-color: var(--color-azulito);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* --- BOTONES DE CONTROL --- */
 .btn-musica {
   position: absolute;
-  top: 25px;
-  right: 25px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(165, 243, 252, 0.3); /* Color brillo de Azulito */
-  color: #a5f3fc;
-  width: 50px;
-  height: 50px;
-  border-radius: 15px; /* Estilo redondeado como el cuerpo del avatar */
+  top: 30px;
+  right: 30px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--color-brillo);
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
   cursor: pointer;
   z-index: 100;
   backdrop-filter: blur(10px);
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
-
-.btn-musica:hover {
-  background: rgba(165, 243, 252, 0.1);
-  border-color: #a5f3fc;
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 0 20px rgba(165, 243, 252, 0.2);
-}
-
-.btn-musica.muted {
-  filter: grayscale(1);
-  opacity: 0.5;
-}
-
 
 .btn-reset {
-  margin-top: 50px;
-  background: none;
-  border: none;
-  color: white;
-  opacity: 0.2;
-  font-size: 0.7rem;
-  cursor: pointer;
-}
-
-/* src/App.css */
-
-.btn-reset {
-  margin-top: 15px;
-  background: rgba(255, 255, 255, 0.05);
+  margin-top: 40px;
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.4);
-  padding: 5px 15px;
+  padding: 10px 20px;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+  transition: all 0.3s;
 }
 
 .btn-reset:hover {
-  background: rgba(255, 0, 0, 0.1); /* Un toque rojo sutil al pasar el mouse */
-  color: white;
-  border-color: rgba(255, 100, 100, 0.3);
+  color: #ff4d4d;
+  border-color: #ff4d4d;
+}
+
+/* --- PLUGIN: SISTEMA DE BITÁCORA --- */
+.plugin-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+}
+
+/* BOTÓN DISPARADOR (ICONO) */
+.plugin-trigger {
+  width: 70px !important;
+  height: 70px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(165, 243, 252, 0.2)) !important;
+  border: 2px solid var(--color-brillo) !important;
+  color: white !important;
+  font-size: 2.2rem !important; /* Icono grande y visible */
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.plugin-trigger:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 25px var(--color-azulito);
+}
+
+/* PANEL DEL DIARIO */
+.plugin-panel {
+  position: absolute;
+  bottom: 85px;
+  right: 0;
+  width: 350px;
+  max-height: 500px;
+  background: rgba(10, 15, 28, 0.98) !important; /* Fondo oscuro sólido para legibilidad */
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+  overflow: hidden;
+}
+
+.plugin-header {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plugin-header h4 {
+  margin: 0;
+  color: var(--color-brillo) !important;
+  font-size: 1.3rem !important;
+}
+
+.plugin-header span {
+  color: #ffffff !important;
+  font-size: 0.9rem !important;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.plugin-content {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* NOTAS INDIVIDUALES */
+.plugin-card {
+  background: rgba(255, 255, 255, 0.07);
+  padding: 18px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+  border-left: 5px solid var(--color-azulito);
+}
+
+.plugin-card p {
+  color: #ffffff !important; /* BLANCO PURO */
+  font-size: 1.15rem !important; /* TAMAÑO GRANDE */
+  line-height: 1.6 !important;
+  margin: 0;
+  font-weight: 300;
+}
+
+/* ESTADO VACÍO (0 NOTAS) */
+.plugin-empty {
+  color: #ffffff !important;
+  font-size: 1.1rem !important;
+  text-align: center !important;
+  margin-top: 80px !important;
+  opacity: 0.7 !important;
+  font-style: italic;
+}
+
+/* SCROLLBAR CUSTOM */
+.plugin-content::-webkit-scrollbar { width: 6px; }
+.plugin-content::-webkit-scrollbar-thumb {
+  background: var(--color-azulito);
+  border-radius: 10px;
 }

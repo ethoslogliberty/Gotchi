@@ -1,0 +1,1 @@
+export { DiarioPlugin } from './DiarioPlugin';
