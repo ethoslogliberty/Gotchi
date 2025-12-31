@@ -11,7 +11,6 @@ body {
   margin: 0;
   overflow: hidden;
   font-family: 'Inter', -apple-system, sans-serif;
-  background: #020617;
   color: white;
 }
 
@@ -48,22 +47,69 @@ body {
   }
 }
 
-/* --- PARTÍCULAS --- */
+/* --- PARTÍCULAS DE POLVO ESTELAR --- */
 .particula {
   position: absolute;
-  background: white;
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  box-shadow: 0 0 15px white;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   z-index: 1;
   pointer-events: none;
+  animation: float-particle 20s infinite linear;
 }
 
-/* --- AZULITO CORE (Aura y Sombra) --- */
+@keyframes float-particle {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.4;
+    scale: 1;
+  }
+
+  90% {
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: translateY(-100px) translateX(50px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* --- AVATAR CONTAINER CON FLOTACIÓN --- */
+.avatar-container {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* --- AZULITO CORE (Sin Aura) --- */
 .gotchi-aura {
   position: relative;
   z-index: 10;
   background: transparent !important;
-  box-shadow: 0 0 80px 10px rgba(59, 130, 246, 0.2) !important;
+  border-radius: 50% !important;
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .gotchi-aura::after {
@@ -103,6 +149,19 @@ body {
   z-index: 10;
   text-align: center;
   min-height: 1.6em;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.status-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.status-text.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .chat-input {
@@ -201,15 +260,33 @@ body {
   left: 0;
   width: 350px;
   max-height: 500px;
-  background: rgba(10, 15, 28, 0.98) !important;
-  /* Fondo oscuro sólido para legibilidad */
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50px) scale(0.9);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.plugin-panel.open {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.plugin-panel.closed {
+  opacity: 0;
+  transform: translateX(-50px) scale(0.9);
+  pointer-events: none;
 }
 
 .plugin-header {
@@ -241,11 +318,26 @@ body {
 
 /* NOTAS INDIVIDUALES */
 .plugin-card {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
   padding: 18px;
   border-radius: 15px;
   margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-left: 5px solid var(--color-azulito);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.3s ease;
+}
+
+.plugin-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .plugin-card p {
@@ -276,4 +368,67 @@ body {
 .plugin-content::-webkit-scrollbar-thumb {
   background: var(--color-azulito);
   border-radius: 10px;
+}
+
+/* --- ANIMACIONES AVATAR CSS PURO --- */
+.speaking {
+  animation: breathing 2s infinite;
+}
+
+.idle {
+  animation: idle-breathing 3s infinite;
+}
+
+@keyframes breathing {
+
+  0%,
+  100% {
+    r: 30;
+  }
+
+  50% {
+    r: 33;
+  }
+}
+
+@keyframes idle-breathing {
+
+  0%,
+  100% {
+    r: 30;
+  }
+
+  50% {
+    r: 31;
+  }
+}
+
+.speaking-mouth {
+  animation: mouth-movement 0.2s infinite alternate;
+}
+
+@keyframes mouth-movement {
+  0% {
+    transform: scaleY(0.2);
+  }
+
+  100% {
+    transform: scaleY(1.5);
+  }
+}
+
+.idle-mouth {
+  animation: mouth-idle 4s infinite ease-in-out;
+}
+
+@keyframes mouth-idle {
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }

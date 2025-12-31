@@ -1,6 +1,5 @@
 // src/App.jsx
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 
 // 1. IMPORTACIONES DE HOOKS
 import { useMemory } from './hooks/useMemory'
@@ -16,20 +15,20 @@ import { Avatar } from './components/avatar.jsx'
 import { DiarioPlugin } from './plugins/DiarioPlugin'
 
 // 4. IMPORTACIONES DE SERVICIOS
-import { 
-  procesarRespuestaIA, 
-  prepararTextoParaVoz, 
-  ajustarVoz 
+import {
+  procesarRespuestaIA,
+  prepararTextoParaVoz,
+  ajustarVoz
 } from './services/interaccion'
 
 import './App.css'
 
 function App() {
   // --- ESTADOS Y HOOKS ---
-  const mouse = useMousePosition(); 
+  const mouse = useMousePosition();
   const { startAmbience, stopAmbience } = useAmbience();
   const { historial, setHistorial, borrarMemoria } = useMemory();
-  
+
   const [status, setStatus] = useState("Estoy aquí para escucharte");
   const [color] = useState("#3b82f6");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -44,8 +43,8 @@ function App() {
     if (isSpeaking) {
       // Usamos una función pura para evitar problemas de evaluación de scripts (CSP)
       intervalRef.current = setInterval(() => {
-        setBocaScale(Math.random()); 
-      }, 120); 
+        setBocaScale(Math.random());
+      }, 120);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -71,7 +70,7 @@ function App() {
     window.speechSynthesis.cancel();
     const textoLimpio = prepararTextoParaVoz(texto);
     const utterance = new SpeechSynthesisUtterance(textoLimpio);
-    
+
     ajustarVoz(utterance);
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -114,10 +113,10 @@ function App() {
   const manejarInteraccionPrincipal = () => {
     // Desbloqueo inicial de audio requerido por navegadores
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-    
-    if (!musicaIniciada) { 
-      startAmbience(); 
-      setMusicaIniciada(true); 
+
+    if (!musicaIniciada) {
+      startAmbience();
+      setMusicaIniciada(true);
     }
 
     // Llamamos a la función con el nombre correcto que devuelve tu hook
@@ -128,53 +127,42 @@ function App() {
 
   return (
     <div className="contenedor-gotchi">
-      
+
       {/* Avatar y Efecto de Aura */}
       <div className={`gotchi-aura ${isListening ? 'escuchando' : ''}`}>
-        <Avatar 
-          color={color} 
-          mouse={mouse} 
-          animations={animations} 
-          bocaScale={bocaScale} 
+        <Avatar
+          color={color}
+          mouse={mouse}
+          animations={animations}
+          bocaScale={bocaScale}
           isSpeaking={isSpeaking}
           status={status}
-          onClick={manejarInteraccionPrincipal} 
+          onClick={manejarInteraccionPrincipal}
         />
       </div>
 
       {/* BLOQUE DE TEXTO CORREGIDO Y BLINDADO */}
-      
-      <AnimatePresence mode="wait">
-        {(isListening || textoAMostrar) && (
-          <motion.p 
-            key={isListening ? "listening" : String(textoAMostrar)}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="status-text"
-          >
-            {isListening ? "Te estoy escuchando..." : textoAMostrar}
-          </motion.p>
-        )}
-      </AnimatePresence>
+      <div className={`status-text ${isListening ? 'visible' : 'hidden'}`}>
+        {isListening ? "Te estoy escuchando..." : textoAMostrar}
+      </div>
 
       {/* Input de Chat Manual */}
-      <form 
+      <form
         onSubmit={(e) => {
           e.preventDefault();
           const input = e.target.chatInput;
-          if (input.value.trim()) { 
-            responderIA(input.value); 
-            input.value = ""; 
+          if (input.value.trim()) {
+            responderIA(input.value);
+            input.value = "";
           }
-        }} 
+        }}
         style={{ zIndex: 10 }}
       >
-        <input 
-          name="chatInput" 
-          type="text" 
-          placeholder="Escribí un mensaje..." 
-          className="chat-input" 
+        <input
+          name="chatInput"
+          type="text"
+          placeholder="Escribí un mensaje..."
+          className="chat-input"
           disabled={isListening || isSpeaking}
           autoComplete="off"
         />

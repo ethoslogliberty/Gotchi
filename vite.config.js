@@ -11,5 +11,15 @@ export default defineConfig({
         defaults: false
       }
     }
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+    headers: {
+      'Content-Security-Policy': "script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src *; img-src * data:; font-src *;"
+    }
+  },
+  css: {
+    devSourcemap: false
   }
 })

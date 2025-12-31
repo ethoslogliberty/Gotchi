@@ -5,5 +5,37 @@
 }
 
 body {
-  background-color: #0f172a;
+  margin: 0;
+  height: 100vh;
+  /* Gradiente radial que simula una fuente de luz lejana */
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Añadimos un efecto de 'respiración' al fondo */
+body::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+  animation: pulseBackground 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulseBackground {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
