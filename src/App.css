@@ -39,8 +39,13 @@ body {
 }
 
 @keyframes pulso-fondo {
-  from { transform: translate(-5%, -5%) scale(1); }
-  to { transform: translate(5%, 5%) scale(1.1); }
+  from {
+    transform: translate(-5%, -5%) scale(1);
+  }
+
+  to {
+    transform: translate(5%, 5%) scale(1.1);
+  }
 }
 
 /* --- PARTÍCULAS --- */
@@ -57,7 +62,8 @@ body {
 .gotchi-aura {
   position: relative;
   z-index: 10;
-  filter: drop-shadow(0 0 40px rgba(59, 130, 246, 0.4));
+  background: transparent !important;
+  box-shadow: 0 0 80px 10px rgba(59, 130, 246, 0.2) !important;
 }
 
 .gotchi-aura::after {
@@ -74,8 +80,17 @@ body {
 }
 
 @keyframes pulso-sombra {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.3); opacity: 0.15; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.15;
+  }
 }
 
 /* --- STATUS TEXT Y CHAT --- */
@@ -150,10 +165,10 @@ body {
 
 /* --- PLUGIN: SISTEMA DE BITÁCORA --- */
 .plugin-container {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  z-index: 1000;
+  position: fixed !important;
+  bottom: 25px;
+  left: 25px;
+  z-index: 9999;
 }
 
 /* BOTÓN DISPARADOR (ICONO) */
@@ -164,12 +179,13 @@ body {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(165, 243, 252, 0.2)) !important;
   border: 2px solid var(--color-brillo) !important;
   color: white !important;
-  font-size: 2.2rem !important; /* Icono grande y visible */
+  font-size: 2.2rem !important;
+  /* Icono grande y visible */
   cursor: pointer;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -182,23 +198,24 @@ body {
 .plugin-panel {
   position: absolute;
   bottom: 85px;
-  right: 0;
+  left: 0;
   width: 350px;
   max-height: 500px;
-  background: rgba(10, 15, 28, 0.98) !important; /* Fondo oscuro sólido para legibilidad */
+  background: rgba(10, 15, 28, 0.98) !important;
+  /* Fondo oscuro sólido para legibilidad */
   backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 25px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
   overflow: hidden;
 }
 
 .plugin-header {
   padding: 20px;
-  background: rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -232,8 +249,10 @@ body {
 }
 
 .plugin-card p {
-  color: #ffffff !important; /* BLANCO PURO */
-  font-size: 1.15rem !important; /* TAMAÑO GRANDE */
+  color: #ffffff !important;
+  /* BLANCO PURO */
+  font-size: 1.15rem !important;
+  /* TAMAÑO GRANDE */
   line-height: 1.6 !important;
   margin: 0;
   font-weight: 300;
@@ -250,7 +269,10 @@ body {
 }
 
 /* SCROLLBAR CUSTOM */
-.plugin-content::-webkit-scrollbar { width: 6px; }
+.plugin-content::-webkit-scrollbar {
+  width: 6px;
+}
+
 .plugin-content::-webkit-scrollbar-thumb {
   background: var(--color-azulito);
   border-radius: 10px;
