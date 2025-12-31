@@ -1,0 +1,14 @@
+// Configuración de Headers para Vercel
+export default {
+    headers: [
+        {
+            source: '/(.*)',
+            headers: [
+                {
+                    key: 'Content-Security-Policy',
+                    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groq.com;"
+                }
+            ]
+        }
+    ]
+}
